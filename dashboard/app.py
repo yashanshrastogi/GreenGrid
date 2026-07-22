@@ -1185,8 +1185,8 @@ def plotly_layout(height=340, margin=None, legend_y=1.05):
 
 @st.cache_data(show_spinner="Generating fresh sensor data…")
 def load_synthetic_data():
-    from generate_synthetic_data import generate_dataset
-    from isolation_forest_v2 import run_isolation_forest
+    from data_loader import generate_synthetic_data as generate_dataset
+    from anomaly_detector import run_isolation_forest
     from decision_engine import apply_decision_engine
     raw    = generate_dataset(output_path=None)
     scored = run_isolation_forest(raw)
@@ -1199,8 +1199,8 @@ def load_synthetic_data():
 
 @st.cache_data(persist="disk", show_spinner="Loading household benchmark data…")
 def load_real_data():
-    from load_uci_data import load_uci_data
-    from isolation_forest_real_data import run_isolation_forest_real
+    from data_loader import load_uci_data
+    from anomaly_detector import run_isolation_forest_real
     from decision_engine import apply_decision_engine
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
     parquet_path = PROCESSED_DIR / "uci_scored_real.parquet"
@@ -1345,7 +1345,7 @@ with st.sidebar:
                             if len(processed) < 20:
                                 st.error("Dataset too small (< 20 valid rows). Please provide more data.")
                             else:
-                                from isolation_forest_v2 import run_isolation_forest
+                                from anomaly_detector import run_isolation_forest
                                 from decision_engine import apply_decision_engine
 
                                 # Use facility-specific contamination
