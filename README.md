@@ -85,27 +85,49 @@ GreenGrid/
 └── README.md
 ```
 
+## ✨ Key Features
+- **Unsupervised Anomaly Detection:** Utilizes Isolation Forest to flag abnormal energy consumption spikes and drops based on occupancy context.
+- **Forecasting & Trend Analysis:** Uses Prophet for accurate hourly load forecasting to help in energy planning and peak shaving.
+- **Decision Support Engine:** Translates raw anomaly scores into actionable insights (e.g., auto-shutoff simulation, facilities alerts) based on customizable thresholds.
+- **Automated PDF Reports:** Generates comprehensive PDF reports summarizing data insights and anomalies automatically.
+- **Real-time Dashboard:** A Streamlit-based interactive UI with live KPI tracking, heatmaps, and explainability for non-technical stakeholders.
+
 ---
 
 ## 🚀 Quick Start & Installation
 
-### 1. Install dependencies
-```bash
-pip install -r requirements.txt
-```
+### Option A: Standard Local Installation
 
-> To skip Prophet and use the dashboard without forecasting: `python run_pipeline.py --skip-prophet`
+1. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+   > To skip Prophet and use the dashboard without forecasting: `python run_pipeline.py --skip-prophet`
 
-### 2. (Optional) Add real UCI data
-Download `household_power_consumption.txt` from the UCI ML Repository and place it in `data/raw/`.
+2. **(Optional) Add real UCI data**
+   Download `household_power_consumption.txt` from the UCI ML Repository and place it in `data/raw/`.
 
-### 3. Run the pipeline
-```bash
-python run_pipeline.py
-```
+3. **Run the pipeline**
+   ```bash
+   python run_pipeline.py
+   ```
 
-### 4. Launch the dashboard
-```bash
-streamlit run dashboard/app.py
-```
-Opens at **http://localhost:8501**
+4. **Launch the dashboard**
+   ```bash
+   streamlit run dashboard/app.py
+   ```
+   Opens at **http://localhost:8501**
+
+### Option B: Docker Setup
+
+1. **Build the image**
+   ```bash
+   docker build -t greengrid .
+   ```
+
+2. **Run the container**
+   ```bash
+   docker run -p 8501:8501 greengrid
+   ```
+   The dashboard will be available at **http://localhost:8501**
+
