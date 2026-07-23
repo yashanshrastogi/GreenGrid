@@ -1708,6 +1708,10 @@ with tab2:
 
     with col_3d:
         # 3D Surface plot
+        c_lock, _ = st.columns([1, 1])
+        with c_lock:
+            unlock_3d = st.toggle("🔓 Unlock 3D Interaction", value=False, help="Toggle to enable rotation and scroll zoom. Locked by default to prevent accidental scroll hijacking on touch screens.")
+        
         fig_3d = go.Figure(go.Surface(
             z=pivot.values.T,
             colorscale=heatmap_cs,
@@ -1718,7 +1722,7 @@ with tab2:
             hovertemplate="Location: %{y}<br>Hour: %{x}<br>Score: %{z:.3f}<extra></extra>",
         ))
         fig_3d.update_layout(
-            dragmode="turntable",
+            dragmode="turntable" if unlock_3d else False,
             scene=dict(
                 aspectmode="manual",
                 aspectratio=dict(x=2.5, y=1.2, z=1.0),
@@ -1736,7 +1740,7 @@ with tab2:
             font=dict(family="Inter", color=C["text_secondary"], size=10),
             height=480, margin=dict(t=20, b=20, l=0, r=0),
         )
-        st.plotly_chart(fig_3d, use_container_width=True, config={"displayModeBar": "hover", "scrollZoom": True, "displaylogo": False})
+        st.plotly_chart(fig_3d, use_container_width=True, config={"displayModeBar": "hover", "scrollZoom": unlock_3d, "displaylogo": False})
 
     with col_2d:
         # Flat heatmap for reference
