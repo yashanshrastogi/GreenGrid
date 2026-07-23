@@ -1704,65 +1704,72 @@ with tab2:
     if pivot.shape[0] > 168:
         pivot = pivot.tail(168)
 
-    col_3d, col_2d = st.columns([3, 2])
+    st.info("💡 **Pro Tip**: The 3D view is locked by default to ensure perfectly smooth page scrolling on mobile and desktop. Unlock it to freely zoom, rotate, and hover over specific data points.", icon="ℹ️")
 
-    with col_3d:
-        # 3D Surface plot
-        c_lock, _ = st.columns([1, 1])
-        with c_lock:
-            unlock_3d = st.toggle("🔓 Unlock 3D Interaction", value=False, help="Toggle to enable rotation and scroll zoom. Locked by default to prevent accidental scroll hijacking on touch screens.")
+    @st.fragment
+    def render_heatmap_visuals(pivot_data):
+        col_3d, col_2d = st.columns([3, 2])
         
-        fig_3d = go.Figure(go.Surface(
-            z=pivot.values.T,
-            colorscale=heatmap_cs,
-            cmin=0, cmax=1,
-            showscale=True,
-            colorbar=dict(title="Deviation Index", thickness=12, len=0.7,
-                          tickfont=dict(size=9), title_font=dict(size=10)),
-            hovertemplate="Location: %{y}<br>Hour: %{x}<br>Score: %{z:.3f}<extra></extra>",
-        ))
-        fig_3d.update_layout(
-            dragmode="turntable" if unlock_3d else False,
-            scene=dict(
-                aspectmode="manual",
-                aspectratio=dict(x=2.5, y=1.2, z=1.0),
-                xaxis=dict(title="Time", tickfont=dict(size=8), title_font=dict(size=9), color=C["text_muted"],
-                           gridcolor=C["grid_color"], backgroundcolor=C["chart_paper"]),
-                yaxis=dict(title="Location", tickfont=dict(size=8), title_font=dict(size=9), color=C["text_muted"],
-                           gridcolor=C["grid_color"], backgroundcolor=C["chart_paper"]),
-                zaxis=dict(title="Score", tickfont=dict(size=8), title_font=dict(size=9), color=C["text_muted"],
-                           range=[0, 1], gridcolor=C["grid_color"], backgroundcolor=C["chart_paper"]),
-                bgcolor=C["chart_paper"],
-                camera=dict(eye=dict(x=2.2, y=-2.8, z=1.5)),
-            ),
-            paper_bgcolor=C["chart_paper"],
-            plot_bgcolor=C["chart_paper"],
-            font=dict(family="Inter", color=C["text_secondary"], size=10),
-            height=480, margin=dict(t=20, b=20, l=0, r=0),
-        )
-        st.plotly_chart(fig_3d, use_container_width=True, config={"displayModeBar": "hover", "scrollZoom": unlock_3d, "displaylogo": False})
+        with col_3d:
+            c_lock, _ = st.columns([1, 1])
+            with c_lock:
+                unlock_3d = st.toggle("🔓 Unlock 3D Interaction", value=False, help="Toggle to enable rotation and scroll zoom. Locked by default to prevent accidental scroll hijacking on touch screens.")
+            
+            fig_3d = go.Figure(go.Surface(
+                z=pivot_data.values.T,
+                colorscale=heatmap_cs,
+                cmin=0, cmax=1,
+                showscale=True,
+                colorbar=dict(title="Deviation Index", thickness=12, len=0.7,
+                              tickfont=dict(size=9), title_font=dict(size=10)),
+                hovertemplate="Location: %{y}<br>Hour: %{x}<br>Score: %{z:.3f}<extra></extra>",
+            ))
+            fig_3d.update_layout(
+                dragmode="turntable" if unlock_3d else False,
+                scene=dict(
+                    aspectmode="manual",
+                    aspectratio=dict(x=2.5, y=1.2, z=1.0),
+                    xaxis=dict(title="Time", tickfont=dict(size=8), title_font=dict(size=9), color=C["text_muted"],
+                               gridcolor=C["grid_color"], backgroundcolor=C["chart_paper"]),
+                    yaxis=dict(title="Location", tickfont=dict(size=8), title_font=dict(size=9), color=C["text_muted"],
+                               gridcolor=C["grid_color"], backgroundcolor=C["chart_paper"]),
+                    zaxis=dict(title="Score", tickfont=dict(size=8), title_font=dict(size=9), color=C["text_muted"],
+                               range=[0, 1], gridcolor=C["grid_color"], backgroundcolor=C["chart_paper"]),
+                    bgcolor=C["chart_paper"],
+                    camera=dict(eye=dict(x=2.2, y=-2.8, z=1.5)),
+                ),
+                paper_bgcolor=C["chart_paper"],
+                plot_bgcolor=C["chart_paper"],
+                font=dict(family="Inter", color=C["text_secondary"], size=10),
+                height=520, margin=dict(t=30, b=20, l=0, r=0),
+            )
+            # staticPlot=True completely removes pointer events so it will never block page scrolling
+            st.plotly_chart(fig_3d, use_container_width=True, config={"displayModeBar": "hover", "scrollZoom": unlock_3d, "staticPlot": not unlock_3d, "displaylogo": False})
+            
+        with col_2d:
+            # Flat heatmap for reference
+            fig_heat = go.Figure(go.Heatmap(
+                z=pivot_data.values.T,
+                x=pivot_data.index.astype(str),
+                y=pivot_data.columns.tolist(),
+                colorscale=heatmap_cs,
+                zmin=0, zmax=1,
+                colorbar=dict(title="Score", thickness=10, len=0.7, tickfont=dict(size=9)),
+                hoverongaps=False,
+                hovertemplate="<b>%{y}</b><br>%{x}<br>Score: %{z:.3f}<extra></extra>",
+            ))
+            fig_heat.update_layout(
+                title=dict(text="2D Top-Down View", font=dict(size=12, color=C["text_secondary"])),
+                paper_bgcolor=C["chart_paper"],
+                plot_bgcolor=C["chart_paper"],
+                font=dict(family="Inter", color=C["text_secondary"], size=9),
+                xaxis=dict(showticklabels=False, showgrid=False),
+                yaxis=dict(tickfont=dict(size=9), color=C["text_muted"]),
+                height=520, margin=dict(t=30, b=20, l=100, r=20),
+            )
+            st.plotly_chart(fig_heat, use_container_width=True, config={"displayModeBar": "hover", "scrollZoom": False, "displaylogo": False})
 
-    with col_2d:
-        # Flat heatmap for reference
-        fig_heat = go.Figure(go.Heatmap(
-            z=pivot.values.T,
-            x=pivot.index.astype(str),
-            y=pivot.columns.tolist(),
-            colorscale=heatmap_cs,
-            zmin=0, zmax=1,
-            colorbar=dict(title="Score", thickness=10, len=0.7, tickfont=dict(size=9)),
-            hoverongaps=False,
-            hovertemplate="<b>%{y}</b><br>%{x}<br>Score: %{z:.3f}<extra></extra>",
-        ))
-        fig_heat.update_layout(
-            paper_bgcolor=C["chart_paper"],
-            plot_bgcolor=C["chart_paper"],
-            font=dict(family="Inter", color=C["text_secondary"], size=9),
-            xaxis=dict(showticklabels=False, showgrid=False),
-            yaxis=dict(tickfont=dict(size=9), color=C["text_muted"]),
-            height=420, margin=dict(t=20, b=20, l=100, r=20),
-        )
-        st.plotly_chart(fig_heat, use_container_width=True, config={"displayModeBar": "hover", "scrollZoom": False, "displaylogo": False})
+    render_heatmap_visuals(pivot)
 
     st.divider()
     st.markdown(f"<div class='section-header'>Location Power Timeline</div>", unsafe_allow_html=True)
