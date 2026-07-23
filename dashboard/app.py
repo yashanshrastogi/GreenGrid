@@ -188,18 +188,26 @@ if "splash_shown" not in st.session_state:
             from {{ transform: translateY(30px); opacity: 0; }}
             to {{ transform: translateY(0); opacity: 1; }}
         }}
+        @keyframes radialCountdown {{
+            from {{ stroke-dashoffset: 0; }}
+            to   {{ stroke-dashoffset: 135; }}
+        }}
         @media (max-width: 640px) {{
-            .splash-modal {{ padding: 25px !important; border-radius: 12px !important; width: 95% !important; }}
-            .splash-close {{ top: -10px !important; right: -10px !important; width: 35px !important; height: 35px !important; font-size: 1.5rem !important; }}
-            .splash-title {{ font-size: 1.3rem !important; margin-bottom: 15px !important; padding-bottom: 10px !important; }}
-            .splash-list {{ font-size: 0.85rem !important; line-height: 1.6 !important; padding-left: 15px !important; }}
-            .splash-list li {{ margin-bottom: 8px !important; }}
+            .splash-modal {{ padding: 20px 18px !important; border-radius: 12px !important; width: 96% !important; max-height: 85vh !important; overflow-y: auto !important; }}
+            /* On mobile, move button fully inside the modal so it never clips outside the screen */
+            .splash-close {{ top: 8px !important; right: 8px !important; width: 36px !important; height: 36px !important; font-size: 1.3rem !important; position: absolute !important; }}
+            .splash-title {{ font-size: 1.15rem !important; margin-bottom: 12px !important; padding-bottom: 8px !important; padding-right: 44px !important; text-align: left !important; }}
+            .splash-list {{ font-size: 0.82rem !important; line-height: 1.55 !important; padding-left: 14px !important; }}
+            .splash-list li {{ margin-bottom: 7px !important; }}
+        }}
+        @media (min-width: 641px) {{
+            .splash-close {{ top: -16px !important; right: -16px !important; }}
         }}
     </style>
     <input type="checkbox" id="close-splash">
     <div id="welcome-splash" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; justify-content: center; align-items: center; animation: hideSplash 20s forwards;">
         <label for="close-splash" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 14, 23, 0.6); backdrop-filter: blur(8px); cursor: default; z-index: 0; margin: 0;"></label>
-        <div class="splash-modal" style="background: rgba(26, 31, 46, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(0, 212, 170, 0.4); border-radius: 16px; padding: 40px; box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 212, 170, 0.15); max-width: 650px; width: 90%; position: relative; z-index: 1; animation: slideUpSplash 0.5s ease-out;">
+        <div class="splash-modal" style="background: rgba(26, 31, 46, 0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(0, 212, 170, 0.4); border-radius: 16px; padding: 40px; box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 212, 170, 0.15); max-width: 650px; width: 90%; position: relative; z-index: 1; animation: slideUpSplash 0.5s ease-out;">
             <label for="close-splash" class="splash-close" style="position: absolute; top: -15px; right: -15px; width: 45px; height: 45px; background: #1a1f2e; border-radius: 50%; color: #00d4aa; cursor: pointer; font-size: 2rem; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; line-height: 1;">
                 <svg viewBox="0 0 45 45" width="100%" height="100%" style="position:absolute; top:0; left:0; transform: rotate(-90deg); pointer-events:none;">
                     <circle cx="22.5" cy="22.5" r="21.5" fill="none" stroke="rgba(0, 212, 170, 0.2)" stroke-width="2"/>
@@ -1005,6 +1013,42 @@ div[data-testid="stCaption"] > p {{
         flex-direction: column !important;
         align-items: flex-start !important;
     }}
+    /* Tabs: allow horizontal scroll on mobile so all tabs are reachable */
+    [data-testid="stTabs"] > div:first-child {{
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+        padding-bottom: 2px !important;
+    }}
+    [data-testid="stTabs"] > div:first-child::-webkit-scrollbar {{ display: none; }}
+    button[data-testid="stTab"] {{
+        min-width: max-content !important;
+        padding: 6px 12px !important;
+        font-size: 0.78rem !important;
+    }}
+    /* Selectboxes: allow scroll-through so page scrolls when finger starts on dropdown */
+    [data-testid="stSelectbox"],
+    [data-testid="stMultiSelect"] {{
+        touch-action: pan-y !important;
+    }}
+    /* Prevent sidebar slider from stealing page scroll */
+    [data-testid="stSlider"] {{
+        touch-action: pan-y !important;
+    }}
+    /* Dataframe horizontal scroll on mobile */
+    [data-testid="stDataFrame"] > div {{
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }}
+    /* KPI cards: 2 per row on phone */
+    div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {{
+        min-width: calc(50% - 0.5rem) !important;
+    }}
+    /* 3D chart: cap height on mobile */
+    .js-plotly-plot .plot-container.plotly {{
+        max-height: 300px;
+    }}
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -1587,9 +1631,20 @@ with tab1:
                 if "Waste (kWh)" in feed.columns:
                     fmt["Waste (kWh)"] = "{:.4f}"
                 styled = feed.style.apply(color_rows, axis=1).format(fmt)
-                st.dataframe(styled, use_container_width=True, height=380)
+                # compact column widths so table fits on mobile without horizontal overflow
+                col_cfg = {
+                    " ": st.column_config.TextColumn(" ", width="small"),
+                    "Location": st.column_config.TextColumn("Location", width="medium"),
+                    "Time": st.column_config.TextColumn("Time", width="medium"),
+                    "Status": st.column_config.TextColumn("Status", width="small"),
+                    "Load (kW)": st.column_config.NumberColumn("Load (kW)", format="%.3f"),
+                    "Baseline (kW)": st.column_config.NumberColumn("Baseline", format="%.3f"),
+                    "Deviation Index": st.column_config.NumberColumn("Dev. Index", format="%.4f"),
+                    "Waste (kWh)": st.column_config.NumberColumn("Waste", format="%.4f"),
+                }
+                st.dataframe(styled, use_container_width=True, height=340, column_config=col_cfg)
             except Exception:
-                st.dataframe(feed, use_container_width=True, height=380)
+                st.dataframe(feed, use_container_width=True, height=340)
 
     with col_right:
         st.markdown(f"<div class='section-header'>Breakdown</div>", unsafe_allow_html=True)
@@ -1635,7 +1690,7 @@ with tab1:
 # ════════════════════════════════════════════════════════════════════════════
 with tab2:
     st.markdown(f"<div class='section-header'>{tip('Deviation Index')} — 3D Surface</div>", unsafe_allow_html=True)
-    st.caption("Each cell = mean deviation index for that location × hour. Use mouse to rotate, zoom, and hover for exact values.")
+    st.caption("Each cell = mean deviation index for that location × hour. 🖱️ Desktop: drag to rotate, scroll to zoom. 📱 Mobile: use two fingers to scroll past the chart.")
 
     hmap = df_f.copy()
     hmap["hour_bucket"] = hmap["timestamp"].dt.floor("1h")
@@ -1703,7 +1758,10 @@ with tab2:
     st.markdown(f"<div class='section-header'>Location Power Timeline</div>", unsafe_allow_html=True)
     locs = sorted(df_f[location_col].unique()) if location_col in df_f.columns else []
     if locs:
-        sel_loc = st.selectbox("Select location", locs)
+        # Use a column to contain the selectbox so it doesn't span full width on desktop
+        sel_col, _ = st.columns([2, 3])
+        with sel_col:
+            sel_loc = st.selectbox("📍 Location", locs, key="heatmap_loc_sel")
         loc_df  = df_f[df_f[location_col] == sel_loc].sort_values("timestamp")
         flagged_loc = loc_df[loc_df["action"].isin(["critical-flag", "high-watch"])]
 
@@ -1759,7 +1817,9 @@ with tab3:
             st.info("Expected: `data/processed/uci_prophet_forecast.csv`")
     else:
         if data_source == "Synthetic" and "room" in fcast_df.columns:
-            sel_r = st.selectbox("Select location for forecast", sorted(fcast_df["room"].unique()))
+            fc_col, _ = st.columns([2, 3])
+            with fc_col:
+                sel_r = st.selectbox("📍 Location", sorted(fcast_df["room"].unique()), key="forecast_loc_sel")
             fcast = fcast_df[fcast_df["room"] == sel_r].sort_values("ds")
         else:
             fcast = fcast_df.sort_values("ds")
