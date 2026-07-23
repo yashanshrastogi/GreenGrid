@@ -51,7 +51,7 @@ def apply_decision_engine(
 
     def decide(row):
         score = row["anomaly_score"]
-        occupied = bool(row.get("occupied", 0))
+        occupied = bool(row.get("occupied", 1))
 
         if score > high_threshold:
             if not occupied:

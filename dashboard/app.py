@@ -1178,7 +1178,7 @@ def apply_thresholds(df: pd.DataFrame, high_t: float, alert_t: float) -> pd.Data
 
     def decide(row):
         s   = float(row.get("deviation_index", row.get("waste_risk_score", row.get("anomaly_score", 0))))
-        occ = bool(row.get("occupied", 0))
+        occ = bool(row.get("occupied", 1))
         if s > high_t:
             return "critical-flag" if not occ else "high-watch"
         elif s > alert_t:
@@ -1188,8 +1188,10 @@ def apply_thresholds(df: pd.DataFrame, high_t: float, alert_t: float) -> pd.Data
     df["action"] = df.apply(decide, axis=1)
 
     if "timestamp" in df.columns and len(df) > 1:
-        diff = df["timestamp"].sort_values().diff().median()
+        diff = df["timestamp"].drop_duplicates().sort_values().diff().median()
         interval_h = diff.total_seconds() / 3600 if pd.notnull(diff) else (5/60)
+        if interval_h == 0:
+            interval_h = 5/60
     else:
         interval_h = 5/60
 
@@ -1257,7 +1259,7 @@ def load_real_data():
     if "expected_load" not in scored.columns:
         scored["expected_load"] = scored.groupby(["circuit","hour","is_weekend"])["power_kw"].transform("median")
     if "action" not in scored.columns:
-        scored["occupied"] = 0
+        scored["occupied"] = 1
         scored = apply_decision_engine(scored)
     if not scored.empty:
         float_cols = scored.select_dtypes(include=["float64"]).columns
@@ -1559,13 +1561,18 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
 
 # ════════════════════════════════════════════════════════════════════════════
 # TAB 1 — OVERVIEW
-# ════════════════════════════════════════════════════════════════════════════
 with tab1:
     n_loc      = df_f[location_col].nunique() if location_col in df_f.columns else 1
     ac         = df_f["action"].value_counts()
     n_critical = int(ac.get("critical-flag", 0))
     n_watch    = int(ac.get("high-watch", 0))
+    
+    # Permanent systemic check: prevent silent zero-impact bugs
+    events     = len(df_f[df_f["action"] != "normal"])
     waste      = float(df_f["waste_kwh"].sum())
+    if events > 0 and waste == 0:
+        st.error("⚠️ **System Check Failed:** Flagged anomalies exist, but total energy waste is 0.00 kWh. This indicates a calculation pipeline error (e.g., zeroed interval timing or missing expected baselines).")
+        
     cost       = float(df_f["cost_saved_inr"].sum())
     co2        = float(df_f["co2e_avoided_kg"].sum())
 
