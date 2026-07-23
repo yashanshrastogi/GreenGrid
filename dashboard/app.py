@@ -1667,7 +1667,7 @@ with tab1:
             hovertemplate="%{label}<br>Count: %{value}<br>%{percent}<extra></extra>",
         ))
         fig_pie.update_layout(**plotly_layout(height=240, margin=dict(t=10, b=30, l=10, r=10), legend_y=-0.15))
-        st.plotly_chart(fig_pie, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
+        st.plotly_chart(fig_pie, use_container_width=True, config={"displayModeBar": "hover", "scrollZoom": False, "displaylogo": False})
 
         st.markdown(f"<div class='section-header' style='margin-top:0.5rem;'>Load Trend</div>", unsafe_allow_html=True)
         hourly = (
@@ -1685,7 +1685,7 @@ with tab1:
             hovertemplate="%{x|%d %b %H:%M}<br>%{y:.2f} kW<extra></extra>",
         ))
         fig_spark.update_layout(**plotly_layout(height=165, margin=dict(t=5, b=20, l=40, r=10)))
-        st.plotly_chart(fig_spark, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
+        st.plotly_chart(fig_spark, use_container_width=True, config={"displayModeBar": "hover", "scrollZoom": False, "displaylogo": False})
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -1733,7 +1733,7 @@ with tab2:
             font=dict(family="Inter", color=C["text_secondary"], size=10),
             height=420, margin=dict(t=20, b=20, l=10, r=10),
         )
-        st.plotly_chart(fig_3d, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
+        st.plotly_chart(fig_3d, use_container_width=True, config={"displayModeBar": "hover", "scrollZoom": False, "displaylogo": False})
 
     with col_2d:
         # Flat heatmap for reference
@@ -1755,7 +1755,7 @@ with tab2:
             yaxis=dict(tickfont=dict(size=9), color=C["text_muted"]),
             height=420, margin=dict(t=20, b=20, l=100, r=20),
         )
-        st.plotly_chart(fig_heat, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
+        st.plotly_chart(fig_heat, use_container_width=True, config={"displayModeBar": "hover", "scrollZoom": False, "displaylogo": False})
 
     st.divider()
     st.markdown(f"<div class='section-header'>Location Power Timeline</div>", unsafe_allow_html=True)
@@ -1813,7 +1813,7 @@ with tab2:
                     hovertemplate="%{y:.3f} kW<extra>High Watch</extra>",
                 ))
         fig_tl.update_layout(**plotly_layout(height=320))
-        st.plotly_chart(fig_tl, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
+        st.plotly_chart(fig_tl, use_container_width=True, config={"displayModeBar": "hover", "scrollZoom": False, "displaylogo": False})
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -1874,7 +1874,7 @@ with tab3:
             hovertemplate="%{x|%d %b}<br>%{y:.3f} kW<extra>Forecast</extra>",
         ))
         fig_fc.update_layout(**plotly_layout(height=360))
-        st.plotly_chart(fig_fc, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
+        st.plotly_chart(fig_fc, use_container_width=True, config={"displayModeBar": "hover", "scrollZoom": False, "displaylogo": False})
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -1903,7 +1903,7 @@ with tab4:
         )
         fig_bar.update_layout(**plotly_layout(height=320), showlegend=False)
         fig_bar.update_traces(texttemplate='%{y:,.0f}', textposition='outside', textfont_size=11, cliponaxis=False, marker_line_width=0)
-        st.plotly_chart(fig_bar, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
+        st.plotly_chart(fig_bar, use_container_width=True, config={"displayModeBar": "hover", "scrollZoom": False, "displaylogo": False})
 
     with col_b:
         st.markdown("#### Impact Summary")
@@ -1939,7 +1939,7 @@ with tab4:
                        annotation_text=f"High Watch ({alert_threshold})", annotation_position="top left",
                        annotation_font=dict(size=10, color=C["warning"]))
     fig_hist.update_layout(**plotly_layout(height=260))
-    st.plotly_chart(fig_hist, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
+    st.plotly_chart(fig_hist, use_container_width=True, config={"displayModeBar": "hover", "scrollZoom": False, "displaylogo": False})
 
     st.divider()
     st.markdown(f"<div class='section-header'>Validation Metrics</div>", unsafe_allow_html=True)
@@ -2002,7 +2002,7 @@ with tab5:
             textfont={"size":10}
         ))
         fig_corr.update_layout(**plotly_layout(height=400))
-        st.plotly_chart(fig_corr, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
+        st.plotly_chart(fig_corr, use_container_width=True, config={"displayModeBar": "hover", "scrollZoom": False, "displaylogo": False})
         
     with tab5_2:
         st.markdown("#### AI Time-Series Decomposition")
@@ -2024,7 +2024,7 @@ with tab5:
             if "weekly" in f_sub.columns:
                 fig_decomp.add_trace(go.Scatter(x=f_sub["ds"], y=f_sub["weekly"], line=dict(color=C["success"], width=2)), row=3, col=1)
             fig_decomp.update_layout(**plotly_layout(height=500), showlegend=False)
-            st.plotly_chart(fig_decomp, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
+            st.plotly_chart(fig_decomp, use_container_width=True, config={"displayModeBar": "hover", "scrollZoom": False, "displaylogo": False})
         else:
             st.info("Decomposition data not available. Ensure models have finished running.")
             
@@ -2057,7 +2057,7 @@ with tab5:
                 layout.setdefault("xaxis", {}).update(title="Hour of Day", tickmode="linear", tick0=0, dtick=1)
                 layout.setdefault("yaxis", {}).update(title="Mean Power (kW)")
                 fig_kmeans.update_layout(**layout)
-                st.plotly_chart(fig_kmeans, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
+                st.plotly_chart(fig_kmeans, use_container_width=True, config={"displayModeBar": "hover", "scrollZoom": False, "displaylogo": False})
             else:
                 st.info("Not enough daily data to perform clustering (need at least 3 days).")
         
