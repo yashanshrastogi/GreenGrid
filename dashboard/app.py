@@ -1718,7 +1718,10 @@ with tab2:
             hovertemplate="Location: %{y}<br>Hour: %{x}<br>Score: %{z:.3f}<extra></extra>",
         ))
         fig_3d.update_layout(
+            dragmode="turntable",
             scene=dict(
+                aspectmode="manual",
+                aspectratio=dict(x=2.5, y=1.2, z=1.0),
                 xaxis=dict(title="Time", tickfont=dict(size=8), title_font=dict(size=9), color=C["text_muted"],
                            gridcolor=C["grid_color"], backgroundcolor=C["chart_paper"]),
                 yaxis=dict(title="Location", tickfont=dict(size=8), title_font=dict(size=9), color=C["text_muted"],
@@ -1726,12 +1729,12 @@ with tab2:
                 zaxis=dict(title="Score", tickfont=dict(size=8), title_font=dict(size=9), color=C["text_muted"],
                            range=[0, 1], gridcolor=C["grid_color"], backgroundcolor=C["chart_paper"]),
                 bgcolor=C["chart_paper"],
-                camera=dict(eye=dict(x=1.5, y=-1.8, z=1.0)),
+                camera=dict(eye=dict(x=1.8, y=-2.2, z=1.2)),
             ),
             paper_bgcolor=C["chart_paper"],
             plot_bgcolor=C["chart_paper"],
             font=dict(family="Inter", color=C["text_secondary"], size=10),
-            height=420, margin=dict(t=20, b=20, l=10, r=10),
+            height=480, margin=dict(t=20, b=20, l=10, r=10),
         )
         st.plotly_chart(fig_3d, use_container_width=True, config={"displayModeBar": "hover", "scrollZoom": False, "displaylogo": False})
 
