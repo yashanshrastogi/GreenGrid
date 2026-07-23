@@ -201,7 +201,7 @@ if "splash_shown" not in st.session_state:
         <label for="close-splash" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 14, 23, 0.6); backdrop-filter: blur(8px); cursor: default; z-index: 0; margin: 0;"></label>
         <div class="splash-modal" style="background: rgba(26, 31, 46, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(0, 212, 170, 0.4); border-radius: 16px; padding: 40px; box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 212, 170, 0.15); max-width: 650px; width: 90%; position: relative; z-index: 1; animation: slideUpSplash 0.5s ease-out;">
             <label for="close-splash" class="splash-close" style="position: absolute; top: -15px; right: -15px; width: 45px; height: 45px; background: #1a1f2e; border-radius: 50%; color: #00d4aa; cursor: pointer; font-size: 2rem; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; line-height: 1;">
-                <svg width="45" height="45" style="position:absolute; top:0; left:0; transform: rotate(-90deg); pointer-events:none;">
+                <svg viewBox="0 0 45 45" width="100%" height="100%" style="position:absolute; top:0; left:0; transform: rotate(-90deg); pointer-events:none;">
                     <circle cx="22.5" cy="22.5" r="21.5" fill="none" stroke="rgba(0, 212, 170, 0.2)" stroke-width="2"/>
                     <circle cx="22.5" cy="22.5" r="21.5" fill="none" stroke="#00d4aa" stroke-width="2" stroke-dasharray="135" stroke-dashoffset="0" style="animation: radialCountdown 20s linear forwards;"/>
                 </svg>
@@ -973,29 +973,29 @@ div[data-testid="stCaption"] > p {{
 
 @media (max-width: 640px) {{
     .block-container {{
-        padding: 0.8rem 0.8rem 2.5rem !important;
+        padding: 1rem 0.5rem 4rem !important;
     }}
     .gg-header-title {{
-        font-size: 1.3rem !important;
+        font-size: 1.35rem !important;
     }}
     .gg-header-sub {{
-        font-size: 0.78rem !important;
+        font-size: 0.85rem !important;
     }}
     .gg-stat-item {{
         min-width: 100px !important;
     }}
     .gg-stat-val {{
-        font-size: 0.95rem !important;
+        font-size: 1.0rem !important;
     }}
     .gg-stat-lbl {{
-        font-size: 0.6rem !important;
+        font-size: 0.7rem !important;
     }}
     .section-header {{
-        font-size: 0.95rem !important;
-        padding-left: 0.7rem !important;
+        font-size: 1.0rem !important;
+        padding-left: 0.5rem !important;
     }}
     .kpi-label {{
-        font-size: 0.6rem !important;
+        font-size: 0.7rem !important;
     }}
     .kpi-unit {{
         font-size: 0.6rem !important;
@@ -1309,7 +1309,7 @@ with st.sidebar:
 
                     # Data preview
                     with st.expander("Preview data (first 5 rows)"):
-                        st.dataframe(preview_df.head(5), width='stretch')
+                        st.dataframe(preview_df.head(5), use_container_width=True)
 
                     if st.button("Analyze Dataset"):
                         with st.spinner("Validating and processing…"):
@@ -1587,9 +1587,9 @@ with tab1:
                 if "Waste (kWh)" in feed.columns:
                     fmt["Waste (kWh)"] = "{:.4f}"
                 styled = feed.style.apply(color_rows, axis=1).format(fmt)
-                st.dataframe(styled, width='stretch', height=380)
+                st.dataframe(styled, use_container_width=True, height=380)
             except Exception:
-                st.dataframe(feed, width='stretch', height=380)
+                st.dataframe(feed, use_container_width=True, height=380)
 
     with col_right:
         st.markdown(f"<div class='section-header'>Breakdown</div>", unsafe_allow_html=True)
@@ -1609,7 +1609,7 @@ with tab1:
             hovertemplate="%{label}<br>Count: %{value}<br>%{percent}<extra></extra>",
         ))
         fig_pie.update_layout(**plotly_layout(height=240, margin=dict(t=10, b=30, l=10, r=10), legend_y=-0.15))
-        st.plotly_chart(fig_pie, width='stretch', config={"displayModeBar": False})
+        st.plotly_chart(fig_pie, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
 
         st.markdown(f"<div class='section-header' style='margin-top:0.5rem;'>Load Trend</div>", unsafe_allow_html=True)
         hourly = (
@@ -1627,7 +1627,7 @@ with tab1:
             hovertemplate="%{x|%d %b %H:%M}<br>%{y:.2f} kW<extra></extra>",
         ))
         fig_spark.update_layout(**plotly_layout(height=165, margin=dict(t=5, b=20, l=40, r=10)))
-        st.plotly_chart(fig_spark, width='stretch', config={"displayModeBar": False})
+        st.plotly_chart(fig_spark, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -1675,7 +1675,7 @@ with tab2:
             font=dict(family="Inter", color=C["text_secondary"], size=10),
             height=420, margin=dict(t=20, b=20, l=10, r=10),
         )
-        st.plotly_chart(fig_3d, width='stretch', config={"displayModeBar": True, "scrollZoom": True})
+        st.plotly_chart(fig_3d, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
 
     with col_2d:
         # Flat heatmap for reference
@@ -1697,7 +1697,7 @@ with tab2:
             yaxis=dict(tickfont=dict(size=9), color=C["text_muted"]),
             height=420, margin=dict(t=20, b=20, l=100, r=20),
         )
-        st.plotly_chart(fig_heat, width='stretch', config={"displayModeBar": False})
+        st.plotly_chart(fig_heat, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
 
     st.divider()
     st.markdown(f"<div class='section-header'>Location Power Timeline</div>", unsafe_allow_html=True)
@@ -1741,7 +1741,7 @@ with tab2:
                     hovertemplate="%{y:.3f} kW<extra>High Watch</extra>",
                 ))
         fig_tl.update_layout(**plotly_layout(height=320))
-        st.plotly_chart(fig_tl, width='stretch', config={"displayModeBar": True})
+        st.plotly_chart(fig_tl, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -1800,7 +1800,7 @@ with tab3:
             hovertemplate="%{x|%d %b}<br>%{y:.3f} kW<extra>Forecast</extra>",
         ))
         fig_fc.update_layout(**plotly_layout(height=360))
-        st.plotly_chart(fig_fc, width='stretch', config={"displayModeBar": True})
+        st.plotly_chart(fig_fc, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -1829,7 +1829,7 @@ with tab4:
         )
         fig_bar.update_layout(**plotly_layout(height=320), showlegend=False)
         fig_bar.update_traces(texttemplate='%{y:,.0f}', textposition='outside', textfont_size=11, cliponaxis=False, marker_line_width=0)
-        st.plotly_chart(fig_bar, width='stretch', config={"displayModeBar": False})
+        st.plotly_chart(fig_bar, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
 
     with col_b:
         st.markdown("#### Impact Summary")
@@ -1863,7 +1863,7 @@ with tab4:
                        annotation_text=f"High Watch ({alert_threshold})", annotation_position="top left",
                        annotation_font=dict(size=10, color=C["warning"]))
     fig_hist.update_layout(**plotly_layout(height=260))
-    st.plotly_chart(fig_hist, width='stretch', config={"displayModeBar": False})
+    st.plotly_chart(fig_hist, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
 
     st.divider()
     st.markdown(f"<div class='section-header'>Validation Metrics</div>", unsafe_allow_html=True)
