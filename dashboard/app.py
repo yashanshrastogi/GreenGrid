@@ -1729,14 +1729,14 @@ with tab2:
                 zaxis=dict(title="Score", tickfont=dict(size=8), title_font=dict(size=9), color=C["text_muted"],
                            range=[0, 1], gridcolor=C["grid_color"], backgroundcolor=C["chart_paper"]),
                 bgcolor=C["chart_paper"],
-                camera=dict(eye=dict(x=1.8, y=-2.2, z=1.2)),
+                camera=dict(eye=dict(x=2.2, y=-2.8, z=1.5)),
             ),
             paper_bgcolor=C["chart_paper"],
             plot_bgcolor=C["chart_paper"],
             font=dict(family="Inter", color=C["text_secondary"], size=10),
-            height=480, margin=dict(t=20, b=20, l=10, r=10),
+            height=480, margin=dict(t=20, b=20, l=0, r=0),
         )
-        st.plotly_chart(fig_3d, use_container_width=True, config={"displayModeBar": "hover", "scrollZoom": False, "displaylogo": False})
+        st.plotly_chart(fig_3d, use_container_width=True, config={"displayModeBar": "hover", "scrollZoom": True, "displaylogo": False})
 
     with col_2d:
         # Flat heatmap for reference
