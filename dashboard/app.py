@@ -17,6 +17,8 @@ import pandas as pd
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
+import plotly.figure_factory as ff
+from sklearn.cluster import KMeans
 from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
 
@@ -1544,11 +1546,12 @@ st.markdown(
 st.caption("Tip: adjust the sidebar controls to tune sensitivity or switch datasets without losing context.")
 
 # ── Tabs ──────────────────────────────────────────────────────────────────────
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "Overview",
     "Heatmap",
     "Forecast",
     "Analytics",
+    "Advanced Analytics",
     "Alerts",
     "Insights",
 ])
@@ -1774,6 +1777,17 @@ with tab2:
             fill="tozeroy", fillcolor=f"rgba({rgb[0]},{rgb[1]},{rgb[2]},0.07)",
             hovertemplate="%{x|%d %b %H:%M}<br>%{y:.3f} kW<extra>Actual</extra>",
         ))
+        
+        # Add a 24h rolling average trendline
+        interval_min = (loc_df["timestamp"].iloc[1] - loc_df["timestamp"].iloc[0]).total_seconds() / 60 if len(loc_df) > 1 else 60
+        w_24h = max(1, int(24 * 60 / interval_min))
+        loc_df["rolling_avg"] = loc_df["power_kw"].rolling(w_24h, min_periods=1, center=True).mean()
+        fig_tl.add_trace(go.Scatter(
+            x=loc_df["timestamp"], y=loc_df["rolling_avg"],
+            mode="lines", name="24h Trend",
+            line=dict(color=C["warning"], width=2),
+            hovertemplate="%{x|%d %b %H:%M}<br>Trend: %{y:.3f} kW<extra></extra>",
+        ))
         if "expected_load" in loc_df.columns:
             fig_tl.add_trace(go.Scatter(
                 x=loc_df["timestamp"], y=loc_df["expected_load"],
@@ -1914,7 +1928,9 @@ with tab4:
     fig_hist = px.histogram(
         df_f, x="deviation_index", nbins=60,
         color_discrete_sequence=[primary_color],
+        marginal="violin",
         labels={"deviation_index": "Deviation Index"},
+        title="Deviation Index Probability Density"
     )
     fig_hist.add_vline(x=high_threshold, line_color=C["danger"],  line_dash="dash",
                        annotation_text=f"Critical ({high_threshold})", annotation_position="top right",
@@ -1955,9 +1971,112 @@ with tab4:
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# TAB 5 — ALERTS
+
+# ════════════════════════════════════════════════════════════════════════════
+# TAB 5 — ADVANCED ANALYTICS (AI & Data Science Tools)
 # ════════════════════════════════════════════════════════════════════════════
 with tab5:
+    st.markdown(f"<div class='section-header'>{tip('Data Science Workspace', 'AI Feature Analysis')}</div>", unsafe_allow_html=True)
+    
+    tab5_1, tab5_2, tab5_3, tab5_4 = st.tabs([
+        "Correlation Matrix", "AI Time-Series Decomposition", "Unsupervised Load Clustering", "Data Exports"
+    ])
+    
+    with tab5_1:
+        st.markdown("#### Feature Importance & Correlation Heatmap")
+        st.markdown("Identify which factors drive anomalies by viewing their linear correlation (Pearson).")
+        cols_for_corr = ["power_kw", "expected_load", "deviation_index"]
+        if "hour" in df_f.columns: cols_for_corr.append("hour")
+        if "waste_kwh" in df_f.columns: cols_for_corr.append("waste_kwh")
+        if "rolling_std_2h" in df_f.columns: cols_for_corr.append("rolling_std_2h")
+        
+        corr_df = df_f[[c for c in cols_for_corr if c in df_f.columns]].corr().round(3)
+        fig_corr = go.Figure(data=go.Heatmap(
+            z=corr_df.values,
+            x=corr_df.columns,
+            y=corr_df.columns,
+            colorscale="RdBu",
+            zmin=-1, zmax=1,
+            text=corr_df.values,
+            texttemplate="%{text}",
+            textfont={"size":10}
+        ))
+        fig_corr.update_layout(**plotly_layout(height=400))
+        st.plotly_chart(fig_corr, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
+        
+    with tab5_2:
+        st.markdown("#### AI Time-Series Decomposition")
+        st.markdown("View the underlying hidden components identified by the Prophet AI model.")
+        fcast_df = load_forecast_data(data_source)
+        if fcast_df is not None and "trend" in fcast_df.columns:
+            fc_col, _ = st.columns([2, 3])
+            with fc_col:
+                if data_source == "Synthetic" and "room" in fcast_df.columns:
+                    ds_sel_r = st.selectbox("📍 Location", sorted(fcast_df["room"].unique()), key="ds_forecast_loc")
+                    f_sub = fcast_df[fcast_df["room"] == ds_sel_r].sort_values("ds")
+                else:
+                    f_sub = fcast_df.sort_values("ds")
+            
+            fig_decomp = make_subplots(rows=3, cols=1, shared_xaxes=True, subplot_titles=("Trend", "Daily Seasonality", "Weekly Seasonality"))
+            fig_decomp.add_trace(go.Scatter(x=f_sub["ds"], y=f_sub["trend"], line=dict(color=C["accent"], width=2)), row=1, col=1)
+            if "daily" in f_sub.columns:
+                fig_decomp.add_trace(go.Scatter(x=f_sub["ds"], y=f_sub["daily"], line=dict(color=C["warning"], width=2)), row=2, col=1)
+            if "weekly" in f_sub.columns:
+                fig_decomp.add_trace(go.Scatter(x=f_sub["ds"], y=f_sub["weekly"], line=dict(color=C["success"], width=2)), row=3, col=1)
+            fig_decomp.update_layout(**plotly_layout(height=500), showlegend=False)
+            st.plotly_chart(fig_decomp, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
+        else:
+            st.info("Decomposition data not available. Ensure models have finished running.")
+            
+    with tab5_3:
+        st.markdown("#### K-Means Load Clustering (Unsupervised AI)")
+        st.markdown("Automatically clusters daily 24-hour load profiles into distinct 'Operating Modes'.")
+        if len(df_f) > 0 and "timestamp" in df_f.columns and "power_kw" in df_f.columns:
+            # Aggregate to hourly then pivot to daily profiles
+            df_hour = df_f.copy()
+            df_hour["date"] = df_hour["timestamp"].dt.date
+            df_hour["hour"] = df_hour["timestamp"].dt.hour
+            daily_profiles = df_hour.groupby(["date", "hour"])["power_kw"].mean().unstack(fill_value=0)
+            
+            if len(daily_profiles) >= 3:
+                kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
+                clusters = kmeans.fit_predict(daily_profiles.values)
+                daily_profiles["Cluster"] = clusters
+                
+                fig_kmeans = go.Figure()
+                colors = [C["accent"], C["warning"], C["success"]]
+                for i in range(3):
+                    cluster_data = daily_profiles[daily_profiles["Cluster"] == i].drop(columns="Cluster")
+                    mean_profile = cluster_data.mean()
+                    fig_kmeans.add_trace(go.Scatter(
+                        x=mean_profile.index, y=mean_profile.values,
+                        mode="lines", name=f"Mode {i+1} (n={len(cluster_data)})",
+                        line=dict(color=colors[i], width=3)
+                    ))
+                layout = plotly_layout(height=400)
+                layout.setdefault("xaxis", {}).update(title="Hour of Day", tickmode="linear", tick0=0, dtick=1)
+                layout.setdefault("yaxis", {}).update(title="Mean Power (kW)")
+                fig_kmeans.update_layout(**layout)
+                st.plotly_chart(fig_kmeans, use_container_width=True, config={"displayModeBar": False, "scrollZoom": False})
+            else:
+                st.info("Not enough daily data to perform clustering (need at least 3 days).")
+        
+    with tab5_4:
+        st.markdown("#### Data Exports")
+        st.markdown("Export cleaned datasets for further data science analysis in Jupyter or Python.")
+        col_ex1, col_ex2 = st.columns(2)
+        with col_ex1:
+            csv_clean = df_f.to_csv(index=False)
+            st.download_button("Download Cleaned Dataset (CSV)", csv_clean, "greengrid_cleaned.csv", "text/csv", use_container_width=True)
+        with col_ex2:
+            if "fcast_df" in locals() and fcast_df is not None:
+                csv_fcast = fcast_df.to_csv(index=False)
+                st.download_button("Download Forecast Profiles (CSV)", csv_fcast, "greengrid_forecasts.csv", "text/csv", use_container_width=True)
+
+
+# TAB 6 — ALERTS
+# ════════════════════════════════════════════════════════════════════════════
+with tab6:
     st.markdown(f"<div class='section-header'>{tip('Notification Preview', 'Alert Generator')}</div>", unsafe_allow_html=True)
 
     col_sel, col_out = st.columns([1, 2])
@@ -2056,9 +2175,9 @@ with tab5:
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# TAB 6 — INSIGHTS & RECOMMENDATIONS
+# TAB 7 — INSIGHTS & RECOMMENDATIONS
 # ════════════════════════════════════════════════════════════════════════════
-with tab6:
+with tab7:
     st.markdown(f"<div class='section-header'>Energy Insights &amp; Recommendations</div>", unsafe_allow_html=True)
 
     total_records = len(df_f)

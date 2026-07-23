@@ -49,8 +49,12 @@ def run_prophet_synthetic(input_path: str, output_path: str) -> dict:
         future = model.make_future_dataframe(periods=len(test), freq="1h")
         forecast = model.predict(future)
 
+        cols_to_keep = ["ds", "yhat", "yhat_lower", "yhat_upper", "trend"]
+        if "daily" in forecast.columns: cols_to_keep.append("daily")
+        if "weekly" in forecast.columns: cols_to_keep.append("weekly")
+
         eval_df = test.merge(
-            forecast[["ds", "yhat", "yhat_lower", "yhat_upper"]], on="ds", how="left"
+            forecast[cols_to_keep], on="ds", how="left"
         )
         mae = (eval_df["y"] - eval_df["yhat"]).abs().mean()
         rmse = ((eval_df["y"] - eval_df["yhat"]) ** 2).mean() ** 0.5
@@ -107,8 +111,12 @@ def run_prophet_real(long_df: pd.DataFrame, output_path: str, plot_path: str) ->
     future = model.make_future_dataframe(periods=len(test), freq="1h")
     forecast = model.predict(future)
 
+    cols_to_keep = ["ds", "yhat", "yhat_lower", "yhat_upper", "trend"]
+    if "daily" in forecast.columns: cols_to_keep.append("daily")
+    if "weekly" in forecast.columns: cols_to_keep.append("weekly")
+
     eval_df = test.merge(
-        forecast[["ds", "yhat", "yhat_lower", "yhat_upper"]], on="ds", how="left"
+        forecast[cols_to_keep], on="ds", how="left"
     )
     mae = (eval_df["y"] - eval_df["yhat"]).abs().mean()
     rmse = ((eval_df["y"] - eval_df["yhat"]) ** 2).mean() ** 0.5
